@@ -1,0 +1,29 @@
+<!DOCTYPE html5>
+<html>
+<head>
+<title>test</title>
+
+</head>
+<body>
+<video src="rabbit320.mp4"></video>
+
+
+<script>
+function go(){
+var audioContext = new (AudioContext||webkitAudioContext)();
+var video = document.querySelector("video");
+var mediaSource = audioContext.createMediaElementSource(video);
+var analyser = audioContext.createAnalyser();
+mediaSource.connect(analyser);
+analyser.connect(audioContext.destination);
+
+video.play();
+console.log(getSoundData(analyser));
+}
+function getSoundData(analyser){
+   var sample = new Float32Array(analyser.frequencyBinCount);
+   return analyser.getFloatFrequencyData(sample);  
+}
+</script>
+</body>
+</html>
