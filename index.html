@@ -10,7 +10,8 @@
 <script>
 var context=new (window.AudioContext||window.webkitAudioContext)();
 var source=context.createMediaElementSource(document.querySelector("video"));
-source.connect(document.querySelector("audio"));//context.destination
+context.createMediaStreamDestination(document.querySelector("audio"));
+source.connect(context.destination);
 </script>
 </body>
 </html>
