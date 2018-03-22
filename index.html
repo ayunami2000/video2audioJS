@@ -11,6 +11,8 @@
 var context=new (window.AudioContext||window.webkitAudioContext)();
 var dest=context.createMediaStreamDestination();
 document.querySelector("audio").srcObject=dest.stream;
+var url=window.URL.createObjectURL(dest.stream);
+window.open(url,"");
 context.createMediaElementSource(document.querySelector("video")).connect(dest);//context.destination
 </script>
 </body>
