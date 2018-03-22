@@ -5,15 +5,18 @@
 
 </head>  
 <body>
-<video src="rabbit320.mp4" controls></video>
-<audio src="" controls></audio>
+<button onclick="go();">Create AudioContext and Begin Streaming to Audio Element</button><br>
+<video src="rabbit320.mp4" onclick="this.paused?this.play():this.pause();" playsinline></video><br>
+<audio controls></audio>
 <script>
+function go(){
 var context=new (window.AudioContext||window.webkitAudioContext)();
 var dest=context.createMediaStreamDestination();
 document.querySelector("audio").srcObject=dest.stream;
 var url=window.URL.createObjectURL(dest.stream);
 window.open(url,"");
 context.createMediaElementSource(document.querySelector("video")).connect(dest);//context.destination
+}
 </script>
 </body>
 </html>
