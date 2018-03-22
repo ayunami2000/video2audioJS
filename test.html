@@ -9,7 +9,7 @@
    <button onclick="go();">Go!</button>
 
 <script>
-function go(){
+function go(){try{
 function getBuffer(resolve) {
     var reader = new FileReader();
     reader.onload = function () {
@@ -41,7 +41,7 @@ videoFileAsBuffer.then(function (data) {
         }).catch(function (err) {alert('Rendering failed: ' + err);});
     });
 });
-}
+}catch(e){alert(e);}}
 </script>
 </body>
 </html>
