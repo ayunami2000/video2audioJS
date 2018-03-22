@@ -10,17 +10,16 @@
 
 <script>
 function go(){
-var input=document.querySelector("input");
 function getBuffer(resolve) {
     var reader = new FileReader();
     reader.onload = function () {
         var arrayBuffer = reader.result;
         resolve(arrayBuffer);
     }
-    reader.readAsArrayBuffer(fileData);
+    reader.readAsArrayBuffer(new Blob([document.querySelector("input").files[0]]));
 }
 var audioContext = new(window.AudioContext || window.webkitAudioContext)();
-fileData = new Blob([input.files[0]]);
+//fileData = new Blob([input.files[0]]);
 var videoFileAsBuffer = new Promise(getBuffer);
 videoFileAsBuffer.then(function (data) {
     audioContext.decodeAudioData(data).then(function (decodedAudioData) {
@@ -34,7 +33,7 @@ videoFileAsBuffer.then(function (data) {
         soundSource.connect(offlineAudioContext.destination);
         soundSource.start();
         offlineAudioContext.startRendering().then(function (renderedBuffer) {
-        console.log(renderedBuffer); // outputs audiobuffer
+        alert(renderedBuffer); // outputs audiobuffer
         var song = audioContext.createBufferSource();
         song.buffer = renderedBuffer;
         song.connect(audioContext.destination);
