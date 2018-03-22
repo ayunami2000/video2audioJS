@@ -9,8 +9,8 @@
 <audio></audio>
 <script>
 var context=new (window.AudioContext||window.webkitAudioContext)();
-var source=context.createMediaElementSource(document.querySelector("audio"));
-source.connect(context.destination);
+var source=context.createMediaElementSource(document.querySelector("video"));
+source.connect(document.querySelector("audio"));//context.destination
 </script>
 </body>
 </html>
