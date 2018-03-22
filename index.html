@@ -1,2 +1,16 @@
+<!DOCTYPE html5>
+<html>
+<head>
+<title>video2audioJS</title>
+
+</head>  
+<body>
 <video src="rabbit320.mp4" controls></video>
 <audio></audio>
+<script>
+var context=new (window.AudioContext||window.webkitAudioContext)();
+var source=context.createMediaElementSource(document.querySelector("audio"));
+source.connect(context.destination);
+</script>
+</body>
+</html>
