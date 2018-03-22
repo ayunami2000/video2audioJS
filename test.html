@@ -15,7 +15,7 @@ video.controls = true;
 video.autoplay = true;
 document.body.appendChild(video);
 
-var context = new webkitAudioContext();
+var context = new (AudioContext||webkitAudioContext)();
 var gainNode = context.createGain();
 gainNode.gain.value = 1;                   // Change Gain Value to test
 filter = context.createBiquadFilter();
