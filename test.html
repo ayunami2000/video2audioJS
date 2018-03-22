@@ -5,24 +5,42 @@
 
 </head>
 <body>
-<video src="rabbit320.mp4"></video>
-
+<input type="file"/>
+   <button onclick="go();">Go!</button>
 
 <script>
 function go(){
-var audioContext = new (AudioContext||webkitAudioContext)();
-var video = document.querySelector("video");
-var mediaSource = audioContext.createMediaElementSource(video);
-var analyser = audioContext.createAnalyser();
-mediaSource.connect(analyser);
-analyser.connect(audioContext.destination);
-
-video.play();
-console.log(getSoundData(analyser));
+var input=document.querySelector("input");
+function getBuffer(resolve) {
+    var reader = new FileReader();
+    reader.onload = function () {
+        var arrayBuffer = reader.result;
+        resolve(arrayBuffer);
+    }
+    reader.readAsArrayBuffer(fileData);
 }
-function getSoundData(analyser){
-   var sample = new Float32Array(analyser.frequencyBinCount);
-   return analyser.getFloatFrequencyData(sample);  
+var audioContext = new(window.AudioContext || window.webkitAudioContext)();
+fileData = new Blob([input.files[0]]);
+var videoFileAsBuffer = new Promise(getBuffer);
+videoFileAsBuffer.then(function (data) {
+    audioContext.decodeAudioData(data).then(function (decodedAudioData) {
+        var offlineAudioContext = new OfflineAudioContext(2, 44100 * 100, 44100);
+        var soundSource = offlineAudioContext.createBufferSource();
+        mySoundBuffer = decodedAudioData;
+        soundSource = audioContext.createBufferSource();
+        soundSource.buffer = mySoundBuffer;
+        // soundSource.connect(audioContext.destination);
+        // soundSource.start();
+        soundSource.connect(offlineAudioContext.destination);
+        soundSource.start();
+        offlineAudioContext.startRendering().then(function (renderedBuffer) {
+        console.log(renderedBuffer); // outputs audiobuffer
+        var song = audioContext.createBufferSource();
+        song.buffer = renderedBuffer;
+        song.connect(audioContext.destination);
+        song.start();
+        }).catch(function (err) {console.log('Rendering failed: ' + err);});
+    });
 }
 </script>
 </body>
