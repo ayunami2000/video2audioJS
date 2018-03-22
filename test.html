@@ -17,6 +17,6 @@ var context = new (AudioContext||webkitAudioContext)();
 var gainNode = context.createGain();
 window.addEventListener('load', function(e) {
   var source = context.createMediaElementSource(video);
-  source.connect(context.createMediaElementDestination(audio));
+  source.connect(context.createMediaStreamDestination(audio));
 }, false);
 </script>
