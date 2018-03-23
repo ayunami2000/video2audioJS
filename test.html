@@ -7,7 +7,7 @@
 <body>
 <input type="file"/>
 <button onclick="go();">Go!</button>
-
+<audio></audio>
 <script>
 function go(){
 var offlineAudioContext = new OfflineAudioContext(2, 44100 * 100, 44100);
@@ -25,8 +25,9 @@ soundSource.start();
 offlineAudioContext.startRendering().then(function (renderedBuffer) {
     console.log(renderedBuffer); // outputs audiobuffer
     var song = audioContext.createBufferSource();
+    var dest=audioContext.createMediaStreamDestination(document.querySelector("audio"));
     song.buffer = renderedBuffer;
-    song.connect(audioContext.destination);
+    song.connect(dest);//audioContext.destination
     song.start();
 }).catch(function (err) {
     console.log('Rendering failed: ' + err);
