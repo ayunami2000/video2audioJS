@@ -7,8 +7,9 @@
 </body>
 <script>
 function read(file){
+document.querySelector("button").setAttribute("disabled","");
 var reader=new FileReader();
-reader.addEventListener("onloadend",function(){document.querySelector("button").disabled=0;});
+reader.addEventListener("onloadend",function(){document.querySelector("button").removeAttribute("disabled");});
 reader.readAsArrayBuffer(file);
 }
 function go(buffer){
