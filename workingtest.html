@@ -9,7 +9,7 @@
 function read(file){
 document.querySelector("button").setAttribute("disabled","");
 var reader=new FileReader();
-reader.addEventListener("onloadend",function(){document.querySelector("button").removeAttribute("disabled");});
+reader.addEventListener("load",function(){document.querySelector("button").removeAttribute("disabled");});
 reader.readAsArrayBuffer(file);
 }
 function go(buffer){
