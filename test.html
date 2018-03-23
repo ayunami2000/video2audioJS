@@ -64,7 +64,7 @@ function loadXHR(url, callback) {
 }
 // STEP 2: Decode the audio file ---------------------------------------
 function decode(buffer) {
-  actx.decodeAudioData(buffer, split);
+  actx.decodeAudioData(buffer, split).catch(function (err) {alert('Rendering failed: ' + err);});
 }
 // STEP 3: Split the buffer --------------------------------------------
 function split(abuffer) {
