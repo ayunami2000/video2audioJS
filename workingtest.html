@@ -2,9 +2,7 @@
 <meta charset="UTF-8">
 <title>workingtest</title>
 <body>
-<input type="file" onchange="read(this.files[0]);"/>
 <button onclick="go();" disabled>Go!</button>
-</body>
 <script>
 function read(file){
 document.querySelector("button").setAttribute("disabled","");
@@ -29,3 +27,5 @@ function go(buffer){
   });
 }
 </script>
+<input type="file" onchange="read(this.files[0]);"/>
+</body>
