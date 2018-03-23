@@ -24,7 +24,7 @@ var videoFileAsBuffer = new Promise(getBuffer);
 videoFileAsBuffer.then(function (data) {
    alert();
     audioContext.decodeAudioData(data).then(function (decodedAudioData) {
-        var offlineAudioContext = new (webkitOfflineAudioContext||OfflineAudioContext)(2, 44100 * 100, 44100);
+        var offlineAudioContext = new (OfflineAudioContext||webkitOfflineAudioContext)(2, 44100 * 100, 44100);
         var soundSource = offlineAudioContext.createBufferSource();
         mySoundBuffer = decodedAudioData;
         soundSource = audioContext.createBufferSource();
