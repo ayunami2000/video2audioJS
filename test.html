@@ -5,8 +5,8 @@
 <script>window.onerror=function(msg,url,ln,col,err){alert('Error\n\n'+msg+'\nLine '+ln+'\nColumn '+col+'\nStack Trace\n'+err);}</script>
 </head>
 <body>
-<input type="file"/>
-   <button onclick="go();">Go!</button>
+<input type="url" placeholder="Enter CORS-enabled video URL here."/>
+<button onclick="go();">Go!</button>
 
 <script>
 function go(){
@@ -46,7 +46,7 @@ videoFileAsBuffer.then(function (data) {
 */
 
 var actx = new(AudioContext || webkitAudioContext)(),
-    url = "url-to-music-file";
+    url = document.querySelector("input[type=url]").value=""?"rabbit320.mp4":document.querySelector("input[type=url]").value;
 // STEP 1: Load audio file using AJAX ----------------------------------
 loadXHR(url, decode);
 function loadXHR(url, callback) {
