@@ -1,22 +1,105 @@
 <!DOCTYPE html5>
-<html>
+<html lang="en">
 <head>
-<title>video2audioJS</title>
-
-</head>  
-<body>
-<button onclick="go();">Create AudioContext and Begin Streaming to Audio Element</button><br>
-<video src="rabbit320.mp4" onclick="this.paused?this.play():this.pause();" playsinline></video><br>
-<audio controls></audio>
-<script>
+  <meta charset="utf-8">
+  <title>video2audioJS</title>
+  <base href="/">
+  <script>window.onerror=function(msg,url,ln,col,err){alert('Error\n\n'+msg+'\nLine '+ln+'\nColumn '+col+'\nStack Trace\n'+err);}</script>  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+  function interleave(chanData){
+    var chans  = chanData.length;
+    if(chans === 1) return chanData[0];
+    var l0     = chanData[0].length;
+    var length = l0 * chans;
+    var result = new Float32Array(length);
+    // --
+    var index = 0;
+    var inputIndex = 0;
+    for(var i=0; i<l0; i++){for(var c=0; c<chans; c++){result[i*chans+c] = chanData[c][i];}}
+    console.log(result);
+    return result;
+  }
+  function floatTo16BitPCM(output, offset, input){try{
+    for (var i = 0; i < input.length; i++, offset+=2){
+      var s = Math.max(-1, Math.min(1, input[i]));
+      output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+  }catch(ex){alert(ex);}}
+  function wr(view, offset, string){for (var i = 0; i < string.length; i++){view.setUint8(offset + i, string.charCodeAt(i));}} 
+  function getAudioSamplesAsWavBlob(samples, interleavedChannels, sampleRate){
+    // see: https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
+    interleavedChannels = interleavedChannels||1;
+    console.log("encoding wav: samples:"+samples.length+", chans:"+interleavedChannels+", rate:"+sampleRate);
+    var buffer  = new ArrayBuffer(44 + samples.length * 2); // 44 + PCM points * 2
+    var dv      = new DataView(buffer);
+    // -- header
+    wr(dv, 0, 'RIFF');   // RIFF
+    dv.setUint32(4, 32 + samples.length * interleavedChannels, true); // 32 + length
+    wr(dv, 8, 'WAVE');   // RIFF type
+    // -- chunk 1
+    wr(dv, 12, 'fmt ');  // chunk id
+    dv.setUint32(16, 16, true);   // subchunk1size (16 for PCM)
+    dv.setUint16(20, 1, true);    // 1=PCM
+    dv.setUint16(22, interleavedChannels, true); // num channels
+    dv.setUint32(24, sampleRate, true);          // samplerate
+    dv.setUint32(28, sampleRate * interleavedChannels * 2, true); // byterate
+    dv.setUint16(32, 2 * interleavedChannels, true);  // block align
+    dv.setUint16(34, 16, true); // bits per sample (16 = 2 bytes)
+    // -- chunk 2
+    wr(dv, 36, 'data');         // data chunk id
+    dv.setUint32(40, samples.length * interleavedChannels, true); // chunk len
+    floatTo16BitPCM(dv, 44, samples);
+    var wavBlob = new Blob([dv], {type: "audio/wav"});
+    return wavBlob;
+  };
+  function exportWAVSampleAndSave(sample, cb){
+    var chanData = [];
+    var chans    = sample.numberOfChannels;
+    console.log("Sample channels:", chans);
+    for(var c=0; c<chans; c++){chanData.push(sample.getChannelData(c));}
+    var sample_chandata = interleave(chanData);
+    console.log("interleaved chandata length:", sample_chandata.length);
+    // --
+    return cb(getAudioSamplesAsWavBlob(sample_chandata, chans, sample.sampleRate));
+  };
 function go(){
-var context=new (window.AudioContext||window.webkitAudioContext)();
-var dest=context.createMediaStreamDestination();
-document.querySelector("audio").srcObject=dest.stream;
-var url=window.URL.createObjectURL(dest.stream);
-window.open(url,"");
-context.createMediaElementSource(document.querySelector("video")).connect(dest);//context.destination
+document.querySelector("button").setAttribute("disabled","");
+document.querySelectorAll("button")[1].setAttribute("disabled","");
+var audioContext=new(window.AudioContext||window.webkitAudioContext)(),reader=new FileReader(),myBuffer;
+	reader.onload=function(){
+  	document.querySelector("button").removeAttribute("disabled");
+    var videoFileAsBuffer=reader.result;
+		audioContext.decodeAudioData(videoFileAsBuffer,function(decodedAudioData){try{
+      var duration=decodedAudioData.duration;
+      var offlineAudioContext=new(window.OfflineAudioContext||window.webkitOfflineAudioContext)(2,44100*duration,44100);
+      var soundSource=offlineAudioContext.createBufferSource();
+      myBuffer=decodedAudioData;
+      soundSource.buffer=myBuffer;
+      soundSource.connect(offlineAudioContext.destination);
+      var source=audioContext.createBufferSource();
+      offlineAudioContext.oncomplete=function(e){
+      	document.querySelectorAll("button")[1].onclick=function(){
+          this.setAttribute("disabled","");
+        	source.buffer=e.renderedBuffer;
+          source.connect(audioContext.destination);
+          source.start?source.start(0):source.noteOn(0);
+          exportWAVSampleAndSave(e.renderedBuffer,function(blob){window.open(window.URL.createObjectURL(blob),"");});
+        };
+      	document.querySelectorAll("button")[1].removeAttribute("disabled");
+      };
+    	offlineAudioContext.startRendering();
+      soundSource.start?soundSource.start(0):soundSource.noteOn(0);
+    }catch(ex){alert(ex);}});
+	};
+	reader.readAsArrayBuffer(document.querySelector("input[type=file]").files[0]);
 }
-</script>
+  </script>
+</head>
+<body>
+  <h1>video2audioJS</h1>
+  <h3>Using iOS Safari? Sorry, but a <a href="https://bugs.webkit.org/show_bug.cgi?id=181939">bug</a> currently prevents this from functioning correctly.<br><a href="https://www.youtube.com/watch?v=v_mF6lWA3LU"><i>For now, you can listen to this on loop.</i></a></h3>
+  <input type="file" onchange="document.querySelector('button').removeAttribute('disabled');"/><br/>
+  <button onclick="go();" disabled>Create AudioBuffer</button><br/>
+  <button disabled>Play/Download WAV</button>
 </body>
 </html>
