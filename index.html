@@ -1,66 +1,58 @@
 <!DOCTYPE html5>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8">
   <title>video2audioJS - A cool little in-browser pure JavaScript converter, which unfortunately, due to a bug, does not work on iOS Safari.</title>
-  <base href="/">
   <script>window.onerror=function(msg,url,ln,col,err){alert('Error\n\n'+msg+'\nLine '+ln+'\nColumn '+col+'\nStack Trace\n'+err);}</script>  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script>
   function interleave(chanData){
-    var chans  = chanData.length;
-    if(chans === 1) return chanData[0];
-    var l0     = chanData[0].length;
-    var length = l0 * chans;
-    var result = new Float32Array(length);
-    // --
-    var index = 0;
-    var inputIndex = 0;
-    for(var i=0; i<l0; i++){for(var c=0; c<chans; c++){result[i*chans+c] = chanData[c][i];}}
-    console.log(result);
+    var chans=chanData.length;
+    if(chans===1)return chanData[0];
+    var l0=chanData[0].length;
+    var length=l0*chans;
+    var result=new Float32Array(length);
+    var index=0;
+    var inputIndex=0;
+    for(var i=0;i<l0;i++){for(var c=0;c<chans;c++){result[i*chans+c]=chanData[c][i];}}
+    //console.log(result);
     return result;
   }
-  function floatTo16BitPCM(output, offset, input){try{
-    for (var i = 0; i < input.length; i++, offset+=2){
-      var s = Math.max(-1, Math.min(1, input[i]));
-      output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  function floatTo16BitPCM(output,offset,input){try{
+    for(var i=0;i<input.length;i++,offset+=2){
+      var s=Math.max(-1,Math.min(1,input[i]));
+      output.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);
     }
   }catch(ex){alert(ex);}}
-  function wr(view, offset, string){for (var i = 0; i < string.length; i++){view.setUint8(offset + i, string.charCodeAt(i));}} 
-  function getAudioSamplesAsWavBlob(samples, interleavedChannels, sampleRate){
-    // see: https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
-    interleavedChannels = interleavedChannels||1;
-    console.log("encoding wav: samples:"+samples.length+", chans:"+interleavedChannels+", rate:"+sampleRate);
-    var buffer  = new ArrayBuffer(44 + samples.length * 2); // 44 + PCM points * 2
-    var dv      = new DataView(buffer);
-    // -- header
-    wr(dv, 0, 'RIFF');   // RIFF
-    dv.setUint32(4, 32 + samples.length * interleavedChannels, true); // 32 + length
-    wr(dv, 8, 'WAVE');   // RIFF type
-    // -- chunk 1
-    wr(dv, 12, 'fmt ');  // chunk id
-    dv.setUint32(16, 16, true);   // subchunk1size (16 for PCM)
-    dv.setUint16(20, 1, true);    // 1=PCM
-    dv.setUint16(22, interleavedChannels, true); // num channels
-    dv.setUint32(24, sampleRate, true);          // samplerate
-    dv.setUint32(28, sampleRate * interleavedChannels * 2, true); // byterate
-    dv.setUint16(32, 2 * interleavedChannels, true);  // block align
-    dv.setUint16(34, 16, true); // bits per sample (16 = 2 bytes)
-    // -- chunk 2
-    wr(dv, 36, 'data');         // data chunk id
-    dv.setUint32(40, samples.length * interleavedChannels, true); // chunk len
-    floatTo16BitPCM(dv, 44, samples);
-    var wavBlob = new Blob([dv], {type: "audio/wav"});
+  function wr(view,offset,string){for(var i=0;i<string.length;i++){view.setUint8(offset+i,string.charCodeAt(i));}} 
+  function getAudioSamplesAsWavBlob(samples,interleavedChannels,sampleRate){
+    interleavedChannels=interleavedChannels||1;
+    //console.log("encoding wav: samples:"+samples.length+", chans:"+interleavedChannels+", rate:"+sampleRate);
+    var buffer=new ArrayBuffer(44+samples.length*2);
+    var dv=new DataView(buffer);
+    wr(dv,0,'RIFF');
+    dv.setUint32(4,32+samples.length*interleavedChannels,true);
+    wr(dv,8,'WAVE');
+    wr(dv,12,'fmt ');
+    dv.setUint32(16,16,true);
+    dv.setUint16(20,1,true);
+    dv.setUint16(22,interleavedChannels,true);
+    dv.setUint32(24,sampleRate,true);
+    dv.setUint32(28,sampleRate*interleavedChannels*2,true);
+    dv.setUint16(32,2*interleavedChannels,true);
+    dv.setUint16(34,16,true);
+    wr(dv,36,'data');
+    dv.setUint32(40,samples.length*interleavedChannels,true);
+    floatTo16BitPCM(dv,44,samples);
+    var wavBlob=new Blob([dv],{type: "audio/wav"});
     return wavBlob;
   };
-  function exportWAVSampleAndSave(sample, cb){
-    var chanData = [];
-    var chans    = sample.numberOfChannels;
-    console.log("Sample channels:", chans);
-    for(var c=0; c<chans; c++){chanData.push(sample.getChannelData(c));}
-    var sample_chandata = interleave(chanData);
-    console.log("interleaved chandata length:", sample_chandata.length);
-    // --
-    return cb(getAudioSamplesAsWavBlob(sample_chandata, chans, sample.sampleRate));
+  function exportWAVSampleAndSave(sample,cb){
+    var chanData=[];
+    var chans=sample.numberOfChannels;
+    //console.log("Sample channels:", chans);
+    for(var c=0;c<chans;c++){chanData.push(sample.getChannelData(c));}
+    var sample_chandata=interleave(chanData);
+    //console.log("interleaved chandata length:", sample_chandata.length);
+    return cb(getAudioSamplesAsWavBlob(sample_chandata,chans,sample.sampleRate));
   };
 function go(){
 document.querySelector("button").setAttribute("disabled","");
@@ -97,7 +89,7 @@ var audioContext=new(window.AudioContext||window.webkitAudioContext)(),reader=ne
 </head>
 <body>
   <h1>video2audioJS</h1>
-  <h3>Using iOS Safari? Sorry, but a <a href="https://bugs.webkit.org/show_bug.cgi?id=181939">bug</a> currently prevents this from functioning correctly.<br><a href="https://soundcloud.com/cg5-beats/do-you-know-da-wae" target="_blank"><i>For now, you can listen to this on loop.</i></a></h3>
+  <h3>Using iOS Safari? Sorry, but a <a href="https://bugs.webkit.org/show_bug.cgi?id=181939" target="_blank">bug</a> currently prevents this from functioning correctly.<br><a href="https://soundcloud.com/cg5-beats/do-you-know-da-wae" target="_blank"><i>For now, you can listen to this on loop.</i></a></h3>
   <input type="file" onchange="document.querySelector('button').removeAttribute('disabled');"/><br/>
   <button onclick="go();" disabled>Create AudioBuffer</button><br/>
   <button disabled>Play/Download WAV</button>
